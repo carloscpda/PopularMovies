@@ -25,7 +25,6 @@ public class NetworkUtils {
     private static final String IMG_SMALL_SIZE = "w185";
     private static final String IMG_BIG_SIZE = "w500";
 
-
     private static URL buildURL(String sortOrder) {
         Uri buildUri = Uri.parse(API_BASE_URL).buildUpon()
                 .appendPath(sortOrder)

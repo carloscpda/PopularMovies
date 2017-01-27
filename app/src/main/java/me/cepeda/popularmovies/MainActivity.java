@@ -16,6 +16,8 @@ import android.widget.TextView;
 import java.net.URL;
 import java.util.concurrent.Callable;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -31,11 +33,11 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     private final static int NUM_COLUMNS_PORTRAIT = 3;
     private final static int NUM_COLUMNS_LANDSCAPE = 5;
 
-    RecyclerView mGridMoviesRecyclerView;
-    MoviesAdapter mMoviesAdapter;
+    @BindView(R.id.rv_grid_movies) RecyclerView mGridMoviesRecyclerView;
+    @BindView(R.id.pb_loading_indicator) ProgressBar mLoadingIndicatorProgressBar;
+    @BindView(R.id.tv_error_message_display) TextView mErrorMessageTextView;
 
-    ProgressBar mLoadingIndicatorProgressBar;
-    TextView mErrorMessageTextView;
+    MoviesAdapter mMoviesAdapter;
 
     Observable<Movie[]> mPopularMoviesObservable;
     Observable<Movie[]> mTopRatedMoviesObservable;
@@ -45,10 +47,7 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mGridMoviesRecyclerView = (RecyclerView) findViewById(R.id.rv_grid_movies);
-        mLoadingIndicatorProgressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
-        mErrorMessageTextView = (TextView) findViewById(R.id.tv_error_message_display);
+        ButterKnife.bind(this);
 
         GridLayoutManager layoutManager;
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {

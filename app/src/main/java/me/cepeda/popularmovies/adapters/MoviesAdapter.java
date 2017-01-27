@@ -11,6 +11,8 @@ import com.squareup.picasso.Picasso;
 
 import java.net.URL;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.utils.NetworkUtils;
@@ -64,11 +66,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
 
     public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public final ImageView mPosterImageView;
+        @BindView(R.id.iv_movie_poster) ImageView mPosterImageView;
 
         public MovieViewHolder(View itemView) {
             super(itemView);
-            mPosterImageView = (ImageView) itemView.findViewById(R.id.iv_movie_poster);
+            ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
         }
 
