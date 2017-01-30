@@ -10,12 +10,14 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.net.URL;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.models.Movie;
-import me.cepeda.popularmovies.utils.NetworkUtils;
+import me.cepeda.popularmovies.models.Size;
+import me.cepeda.popularmovies.utils.TMDbUtils;
 
 /**
  * Created by CEPEDA on 22/1/17.
@@ -23,7 +25,7 @@ import me.cepeda.popularmovies.utils.NetworkUtils;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
-    private Movie[] movies;
+    private List<Movie> movies;
     private final MoviesAdapterOnClickHandler mClickHandler;
 
     public interface MoviesAdapterOnClickHandler {
@@ -45,21 +47,21 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         Context context = holder.mPosterImageView.getContext();
-        String posterPath = movies[position].getMoviePosterPath();
-        URL posterURL = NetworkUtils.buildMovieThumbnailURL(posterPath);
+        String posterPath = movies.get(position).getPosterPath();
+        URL posterURL = TMDbUtils.buildMoviePosterURL(posterPath, Size.SMALL);
         Picasso.with(context).load(String.valueOf(posterURL)).into(holder.mPosterImageView);
     }
 
     @Override
     public int getItemCount() {
         if (movies != null) {
-            return movies.length;
+            return movies.size();
         } else {
             return 0;
         }
     }
 
-    public void setMovies(Movie[] movies) {
+    public void setMovies(List<Movie> movies) {
         this.movies = movies;
         notifyDataSetChanged();
     }
@@ -77,7 +79,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
         @Override
         public void onClick(View view) {
             int position = getAdapterPosition();
-            Movie movieClicked = movies[position];
+            Movie movieClicked = movies.get(position);
             mClickHandler.onClick(movieClicked);
         }
     }

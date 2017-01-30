@@ -13,20 +13,18 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.net.URL;
-import java.util.concurrent.Callable;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import me.cepeda.popularmovies.adapters.MoviesAdapter;
 import me.cepeda.popularmovies.models.Movie;
-import me.cepeda.popularmovies.utils.NetworkUtils;
-import me.cepeda.popularmovies.utils.ParseJsonUtils;
+import me.cepeda.popularmovies.models.MoviesData;
+import me.cepeda.popularmovies.utils.TMDbService;
+import me.cepeda.popularmovies.utils.TMDbUtils;
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements MoviesAdapter.MoviesAdapterOnClickHandler {
 
@@ -39,9 +37,9 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
 
     MoviesAdapter mMoviesAdapter;
 
-    Observable<Movie[]> mPopularMoviesObservable;
-    Observable<Movie[]> mTopRatedMoviesObservable;
-    Observer<Movie[]> mObserver;
+    Observable<MoviesData> mPopularMoviesObservable;
+    Observable<MoviesData> mTopRatedMoviesObservable;
+    Disposable mDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,69 +60,48 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
         mMoviesAdapter = new MoviesAdapter(this);
         mGridMoviesRecyclerView.setAdapter(mMoviesAdapter);
 
-        mPopularMoviesObservable = createObservable(NetworkUtils.buildPopularMoviesURL());
-        mTopRatedMoviesObservable = createObservable(NetworkUtils.buildTopRatedMoviesURL());
-        mObserver = createObserver();
+        Retrofit retrofit = TMDbUtils.getRetrofit();
+        TMDbService service = retrofit.create(TMDbService.class);
+
+        mPopularMoviesObservable = service.getPopularMovieData().cache();
+        mTopRatedMoviesObservable = service.getTopRatedMovieData().cache();
 
         loadPopularMoviesData();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDisposable.dispose();
+    }
+
+    private void subscribe(Observable<MoviesData> observable) {
+        mDisposable = observable.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(disposable -> mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE))
+                .doOnError(throwable -> showErrorMessageView())
+                .subscribe(moviesData -> {
+                    showMoviesDataView();
+                    mMoviesAdapter.setMovies(moviesData.getMovies());
+                });
+    }
+
     private void loadPopularMoviesData() {
-        mPopularMoviesObservable.subscribe(mObserver);
+        subscribe(mPopularMoviesObservable);
     }
 
     private void loadTopRatedMoviesData() {
-        mTopRatedMoviesObservable.subscribe(mObserver);
-    }
-
-    private Observable<Movie[]> createObservable(final URL requestUrl) {
-        return Observable.fromCallable(new Callable<Movie[]>() {
-            @Override
-            public Movie[] call() throws Exception {
-                String jsonResponse = NetworkUtils.getResponseFromHttpUrl(requestUrl);
-                return ParseJsonUtils.getMoviesFromJson(jsonResponse);
-            }
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    private Observer<Movie[]> createObserver() {
-        return new Observer<Movie[]>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-                mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onNext(Movie[] movies) {
-                if (movies != null) {
-                    showMoviesDataView();
-                    mMoviesAdapter.setMovies(movies);
-                } else {
-                    showErrorMessageView();
-                }
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
-                showErrorMessageView();
-            }
-
-            @Override
-            public void onComplete() {
-                mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
-            }
-        };
+        subscribe(mTopRatedMoviesObservable);
     }
 
     private void showMoviesDataView() {
+        mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
         mErrorMessageTextView.setVisibility(View.INVISIBLE);
         mGridMoviesRecyclerView.setVisibility(View.VISIBLE);
     }
 
     private void showErrorMessageView() {
+        mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
         mGridMoviesRecyclerView.setVisibility(View.INVISIBLE);
         mErrorMessageTextView.setVisibility(View.VISIBLE);
     }
@@ -158,5 +135,4 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
         intent.putExtra(Intent.EXTRA_INTENT, movie);
         startActivity(intent);
     }
-
 }

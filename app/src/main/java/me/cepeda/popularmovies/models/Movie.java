@@ -1,27 +1,70 @@
+
 package me.cepeda.popularmovies.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.joda.time.DateTime;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-/**
- * Created by CEPEDA on 22/1/17.
- */
+public class Movie implements Parcelable
+{
 
-public class Movie implements Parcelable {
-
-    private String originalTitle;
-    private String moviePosterPath;
+    @SerializedName("poster_path")
+    @Expose
+    private String posterPath;
+    @SerializedName("overview")
+    @Expose
     private String overview;
-    private Float userRating;
-    private DateTime releaseDate;
+    @SerializedName("release_date")
+    @Expose
+    private String releaseDate;
+    @SerializedName("original_title")
+    @Expose
+    private String originalTitle;
+    @SerializedName("vote_average")
+    @Expose
+    private Double voteAverage;
+    public final static Parcelable.Creator<Movie> CREATOR = new Creator<Movie>() {
 
-    public Movie(String originalTitle, String moviePosterPath, String overview, Float userRating, DateTime releaseDate) {
-        this.originalTitle = originalTitle;
-        this.moviePosterPath = moviePosterPath;
+        public Movie createFromParcel(Parcel in) {
+            Movie instance = new Movie();
+            instance.posterPath = ((String) in.readValue((String.class.getClassLoader())));
+            instance.overview = ((String) in.readValue((String.class.getClassLoader())));
+            instance.releaseDate = ((String) in.readValue((String.class.getClassLoader())));
+            instance.originalTitle = ((String) in.readValue((String.class.getClassLoader())));
+            instance.voteAverage = ((Double) in.readValue((Double.class.getClassLoader())));
+            return instance;
+        }
+
+        public Movie[] newArray(int size) {
+            return (new Movie[size]);
+        }
+
+    }
+    ;
+
+    public String getPosterPath() {
+        return posterPath;
+    }
+
+    public void setPosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public void setOverview(String overview) {
         this.overview = overview;
-        this.userRating = userRating;
+    }
+
+    public String getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(String releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -29,53 +72,28 @@ public class Movie implements Parcelable {
         return originalTitle;
     }
 
-    public String getMoviePosterPath() {
-        return moviePosterPath;
+    public void setOriginalTitle(String originalTitle) {
+        this.originalTitle = originalTitle;
     }
 
-    public String getOverview() {
-        return overview;
+    public Double getVoteAverage() {
+        return voteAverage;
     }
 
-    public Float getUserRating() {
-        return userRating;
+    public void setVoteAverage(Double voteAverage) {
+        this.voteAverage = voteAverage;
     }
 
-    public DateTime getReleaseDate() {
-        return releaseDate;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.originalTitle);
-        dest.writeString(this.moviePosterPath);
-        dest.writeString(this.overview);
-        dest.writeValue(this.userRating);
-        dest.writeSerializable(this.releaseDate);
+        dest.writeValue(posterPath);
+        dest.writeValue(overview);
+        dest.writeValue(releaseDate);
+        dest.writeValue(originalTitle);
+        dest.writeValue(voteAverage);
     }
 
-    protected Movie(Parcel in) {
-        this.originalTitle = in.readString();
-        this.moviePosterPath = in.readString();
-        this.overview = in.readString();
-        this.userRating = (Float) in.readValue(Float.class.getClassLoader());
-        this.releaseDate = (DateTime) in.readSerializable();
+    public int describeContents() {
+        return  0;
     }
 
-    public static final Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>() {
-        @Override
-        public Movie createFromParcel(Parcel source) {
-            return new Movie(source);
-        }
-
-        @Override
-        public Movie[] newArray(int size) {
-            return new Movie[size];
-        }
-    };
 }
