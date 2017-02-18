@@ -10,14 +10,20 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".ui.MainActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MovieInformationActivity"></activity>
+        <activity android:name=".ui.MovieInformationActivity"/>
+        
+        <provider
+            android:authorities="me.cepeda.popularmovies"
+            android:name=".data.FavouriteMoviesProvider"
+            android:exported="false" />
     </application>
 
 </manifest>

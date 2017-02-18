@@ -7,7 +7,6 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import me.cepeda.popularmovies.models.Size;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -25,11 +24,25 @@ public class TMDbUtils {
                 .build();
     }
 
-    public static URL buildMoviePosterURL(String pathUrl, Size size) {
-        Uri buildUri = Uri.parse("http://image.tmdb.org/t/p/")
+    public static URL buildMoviePosterURL(String pathUrl) {
+        Uri buildUri = Uri.parse("http://image.tmdb.org/t/p/w342/")
                 .buildUpon()
-                .appendPath(size.getSize())
-                .appendEncodedPath(pathUrl).build();
+                .appendEncodedPath(pathUrl)
+                .build();
+
+        try {
+            return new URL(buildUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static URL buildMovieBackdropURL(String pathUrl) {
+        Uri buildUri = Uri.parse("http://image.tmdb.org/t/p/w780/")
+                .buildUpon()
+                .appendEncodedPath(pathUrl)
+                .build();
 
         try {
             return new URL(buildUri.toString());

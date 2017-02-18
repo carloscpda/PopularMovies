@@ -16,7 +16,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.models.Movie;
-import me.cepeda.popularmovies.models.Size;
 import me.cepeda.popularmovies.utils.TMDbUtils;
 
 /**
@@ -48,7 +47,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         Context context = holder.mPosterImageView.getContext();
         String posterPath = movies.get(position).getPosterPath();
-        URL posterURL = TMDbUtils.buildMoviePosterURL(posterPath, Size.SMALL);
+        URL posterURL = TMDbUtils.buildMoviePosterURL(posterPath);
         Picasso.with(context).load(String.valueOf(posterURL)).into(holder.mPosterImageView);
     }
 

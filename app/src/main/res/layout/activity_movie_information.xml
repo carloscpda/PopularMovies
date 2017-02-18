@@ -1,55 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView
+<android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/background_light"
+    android:fitsSystemWindows="true"
+    tools:context="me.cepeda.popularmovies.ui.MovieInformationActivity">
 
-    <LinearLayout
-        android:id="@+id/activity_movie_information"
-        android:orientation="vertical"
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:context="me.cepeda.popularmovies.MovieInformationActivity">
+        android:layout_height="300dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:fitsSystemWindows="true">
 
-        <ImageView
-            android:id="@+id/iv_movie_big_poster"
-            android:adjustViewBounds="true"
-            android:scaleType="centerCrop"
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar_layout"
             android:layout_width="match_parent"
-            android:layout_height="300dp" />
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:contentScrim="?attr/colorPrimary"
+            app:expandedTitleMarginStart="48dp"
+            app:expandedTitleMarginEnd="64dp">
 
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/iv_movie_backdrop"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="parallax" />
 
-            <TextView
-                android:id="@+id/tv_original_title"
-                android:textSize="22sp"
-                android:textStyle="bold"
+            <ImageButton
+                android:id="@+id/ib_play_trailer"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_play_arrow_white_48dp"
+                android:layout_gravity="center"
+                android:background="@drawable/circle"
+                android:animateLayoutChanges="true"
+                app:layout_collapseMode="parallax" />
 
-            <TextView
-                android:id="@+id/tv_overview"
-                android:paddingTop="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <android.support.v7.widget.Toolbar
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:layout_collapseMode="pin" />
 
-            <TextView
-                android:id="@+id/tv_user_rating"
-                android:drawableLeft="@drawable/ic_star_yellow_600_24dp"
-                android:textSize="22sp"
-                android:paddingTop="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:layout_gravity="bottom"
+                android:background="@color/colorPrimaryTransparent"
+                app:tabGravity="center"
+                app:tabMode="scrollable"
+                app:tabContentStart="72dp" />
 
+        </android.support.design.widget.CollapsingToolbarLayout>
+    </android.support.design.widget.AppBarLayout>
 
-        </LinearLayout>
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimaryLight"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    </LinearLayout>
-
-</ScrollView>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_favourite"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:src="@drawable/ic_favorite_grey_900_24dp"
+        app:layout_anchor="@id/app_bar_layout"
+        app:layout_anchorGravity="bottom|right|end"
+        />
+</android.support.design.widget.CoordinatorLayout>

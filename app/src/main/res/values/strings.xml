@@ -1,9 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies</string>
     <string name="error_message">An error has occurred. Please check internet connection.</string>
-    <string name="sort_by">Sort by</string>
     <string name="sort_by_popular">Popular</string>
     <string name="sort_by_rating">Top Rated</string>
-    <string name="user_rating">User rating:</string>
-    <string name="release_date">Release date:</string>
+    <string name="sort_by_favourites">Favourites</string>
 </resources>
