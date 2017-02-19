@@ -3,10 +3,6 @@ package me.cepeda.popularmovies.data;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
-/**
- * Created by CEPEDA on 17/2/17.
- */
-
 public class FavouriteMoviesContract {
 
     public static final String AUTHORITY = "me.cepeda.popularmovies";
@@ -20,7 +16,7 @@ public class FavouriteMoviesContract {
 
         public static final String TABLE_NAME = "favourites_movies";
         public static final String COLUMN_TITLE = "title";
-        public static final String COLUMN_TMDB_ID = "id";
+        public static final String COLUMN_TMDB_ID = "tmdb_id";
     }
 
 }

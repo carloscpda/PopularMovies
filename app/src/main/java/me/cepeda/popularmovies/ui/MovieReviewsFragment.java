@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,32 +15,34 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.adapters.ReviewsAdapter;
 import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.models.ReviewsData;
-import me.cepeda.popularmovies.services.TMDbService;
-import me.cepeda.popularmovies.utils.TMDbUtils;
-import retrofit2.Retrofit;
+import me.cepeda.popularmovies.services.ObservablesService;
 
 public class MovieReviewsFragment extends Fragment {
 
-    private final String TAG = getClass().getName();
+    private static final String TAG_POSITION = "position";
 
     @BindView(R.id.rv_reviews) RecyclerView mRecyclerView;
-    ReviewsAdapter mReviewsAdapter;
 
-    private Movie movie;
+    private LinearLayoutManager mLinearLayoutManager;
+    private ReviewsAdapter mReviewsAdapter;
+    private Disposable mDisposable;
+    private Movie mMovie;
+    private int mScrollPosition = 0;
 
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Intent intent = getActivity().getIntent();
-        movie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+        mMovie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+        if (savedInstanceState != null) mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
 
         mReviewsAdapter = new ReviewsAdapter();
-
         loadReviewsData();
     }
 
@@ -50,22 +53,36 @@ public class MovieReviewsFragment extends Fragment {
 
         ButterKnife.bind(this, rootView);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView.setLayoutManager(layoutManager);
+        mLinearLayoutManager = new LinearLayoutManager(getContext());
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mReviewsAdapter);
 
         return rootView;
     }
 
-    private void loadReviewsData() {
-        Retrofit retrofit = TMDbUtils.getRetrofit();
-        TMDbService service = retrofit.create(TMDbService.class);
+    @Override
+    public void onDestroy() {
+        mDisposable.dispose();
+        super.onDestroy();
+    }
 
-        Observable<ReviewsData> observable = service.getReviewsData(movie.getId());
-        observable.subscribeOn(Schedulers.newThread())
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        int position = mLinearLayoutManager.findFirstVisibleItemPosition();
+        outState.putInt(TAG_POSITION, position);
+        super.onSaveInstanceState(outState);
+    }
+
+    private void loadReviewsData() {
+
+        Observable<ReviewsData> observable =
+                ObservablesService.getInstance().getMovieReviewsObservable(mMovie.getId());
+        mDisposable = observable
+                .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(reviewsData -> {
                     mReviewsAdapter.setReviews(reviewsData.getReviews());
+                    mLinearLayoutManager.scrollToPosition(mScrollPosition);
                 });
     }
 

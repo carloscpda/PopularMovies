@@ -6,10 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import me.cepeda.popularmovies.data.FavouriteMoviesContract.FavouriteMoviesEntry;
 
-/**
- * Created by CEPEDA on 17/2/17.
- */
-
 public class FavouriteMoviesDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "favourite_movies.db";

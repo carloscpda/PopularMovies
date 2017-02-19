@@ -10,10 +10,6 @@ import java.net.URL;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Created by CEPEDA on 30/1/17.
- */
-
 public class TMDbUtils {
 
     public static Retrofit getRetrofit() {

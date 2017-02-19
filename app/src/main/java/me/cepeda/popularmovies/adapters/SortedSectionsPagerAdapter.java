@@ -9,10 +9,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import me.cepeda.popularmovies.ui.MainFragment;
 import me.cepeda.popularmovies.R;
 
-/**
- * Created by CEPEDA on 17/2/17.
- */
-
 public class SortedSectionsPagerAdapter extends FragmentPagerAdapter {
 
     public static final String KEY = "sort_by";

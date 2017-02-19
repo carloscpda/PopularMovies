@@ -33,39 +33,36 @@ import me.cepeda.popularmovies.data.FavouriteMoviesContract.FavouriteMoviesEntry
 import me.cepeda.popularmovies.services.ObservablesService;
 import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.models.MoviesData;
-import me.cepeda.popularmovies.services.TMDbService;
-import me.cepeda.popularmovies.utils.TMDbUtils;
-import retrofit2.Retrofit;
 
 public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapterOnClickHandler {
 
-    private final String TAG = getClass().getName();
-
     private final static int NUM_COLUMNS_PORTRAIT = 3;
     private final static int NUM_COLUMNS_LANDSCAPE = 5;
+
+    private final static String TAG_POSITION = "position";
 
     @BindView(R.id.rv_grid_movies) RecyclerView mGridMoviesRecyclerView;
     @BindView(R.id.pb_loading_indicator) ProgressBar mLoadingIndicatorProgressBar;
     @BindView(R.id.tv_error_message_display) TextView mErrorMessageTextView;
 
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
-    MoviesAdapter mMoviesAdapter;
-    TMDbService mService;
+    private GridLayoutManager mGridLayoutManager;
+    private MoviesAdapter mMoviesAdapter;
 
-    Observable<MoviesData> mMoviesDataObservable;
-    int tabPosition;
+    private int mTabPosition;
+    private int mScrollPosition = 0;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Bundle bundle = getArguments();
-        tabPosition = bundle.getInt(SortedSectionsPagerAdapter.KEY);
+        mTabPosition = bundle.getInt(SortedSectionsPagerAdapter.KEY);
+
+        if (savedInstanceState != null)
+            mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
 
         mMoviesAdapter = new MoviesAdapter(this);
-
-        Retrofit retrofit = TMDbUtils.getRetrofit();
-        mService = retrofit.create(TMDbService.class);
     }
 
     @Nullable
@@ -75,13 +72,11 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
 
         ButterKnife.bind(this, rootView);
 
-        GridLayoutManager layoutManager;
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            layoutManager = new GridLayoutManager(getContext(), NUM_COLUMNS_PORTRAIT);
-        } else {
-            layoutManager = new GridLayoutManager(getContext(), NUM_COLUMNS_LANDSCAPE);
-        }
-        mGridMoviesRecyclerView.setLayoutManager(layoutManager);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            mGridLayoutManager = new GridLayoutManager(getContext(), NUM_COLUMNS_PORTRAIT);
+        else mGridLayoutManager = new GridLayoutManager(getContext(), NUM_COLUMNS_LANDSCAPE);
+
+        mGridMoviesRecyclerView.setLayoutManager(mGridLayoutManager);
         mGridMoviesRecyclerView.setHasFixedSize(true);
         mGridMoviesRecyclerView.setAdapter(mMoviesAdapter);
 
@@ -97,21 +92,17 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
     public void onResume() {
         super.onResume();
 
-        switch (tabPosition) {
+        switch (mTabPosition) {
             case 0:
-                mMoviesDataObservable = ObservablesService.getInstance().getPopularMoviesObservable();
-                subscribe(mMoviesDataObservable);
+                subscribe(ObservablesService.getInstance().getPopularMoviesObservable());
                 break;
             case 1:
-                mMoviesDataObservable = ObservablesService.getInstance().getTopRatedMoviesObservable();
-                subscribe(mMoviesDataObservable);
+                subscribe(ObservablesService.getInstance().getTopRatedMoviesObservable());
                 break;
             case 2:
                 subscribe();
                 break;
         }
-
-
     }
 
     @Override
@@ -122,6 +113,10 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        if (mGridLayoutManager != null) {
+            int position = mGridLayoutManager.findFirstVisibleItemPosition();
+            outState.putInt(TAG_POSITION, position);
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -138,14 +133,14 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
     }
 
     private void subscribe(Observable<MoviesData> observable) {
-
         mCompositeDisposable.add(
                 observable.subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
                         .doOnError(throwable -> showErrorMessageView())
                         .subscribe(moviesData -> {
-                            showMoviesDataView();
                             mMoviesAdapter.setMovies(moviesData.getMovies());
+                            mGridLayoutManager.scrollToPosition(mScrollPosition);
+                            showMoviesDataView();
                         })
         );
     }
@@ -156,13 +151,11 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
                 .toList()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe(disposable -> {
-                    mCompositeDisposable.add(disposable);
-                    mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE);
-                })
+                .doOnSubscribe(disposable -> mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE))
                 .doOnError(throwable -> showErrorMessageView())
                 .subscribe(movies -> {
                     mMoviesAdapter.setMovies(movies);
+                    mGridLayoutManager.scrollToPosition(mScrollPosition);
                     showMoviesDataView();
                 });
         mCompositeDisposable.add(subscribe);
@@ -171,9 +164,7 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
     private List<Integer> getIDs() {
         Cursor cursor = getContext().getContentResolver().query(FavouriteMoviesEntry.CONTENT_URI,
                 new String[]{ FavouriteMoviesEntry.COLUMN_TMDB_ID },
-                null,
-                null,
-                FavouriteMoviesEntry.COLUMN_TMDB_ID);
+                null, null, FavouriteMoviesEntry.COLUMN_TMDB_ID);
 
         List<Integer> ids = new ArrayList<>();
         if (cursor != null) {
@@ -184,12 +175,11 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
             cursor.close();
         }
         return ids;
-
     }
 
     @Override
     public void onClick(Movie movie) {
-        Intent intent = new Intent(getContext(), MovieInformationActivity.class);
+        Intent intent = new Intent(getContext(), MovieDetailsActivity.class);
         intent.putExtra(Intent.EXTRA_INTENT, movie);
         startActivity(intent);
     }

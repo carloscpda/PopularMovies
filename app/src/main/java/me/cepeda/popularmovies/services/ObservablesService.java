@@ -7,12 +7,10 @@ import java.util.Map;
 import io.reactivex.Observable;
 import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.models.MoviesData;
+import me.cepeda.popularmovies.models.ReviewsData;
 import me.cepeda.popularmovies.utils.TMDbUtils;
 import retrofit2.Retrofit;
 
-/**
- * Created by CEPEDA on 18/2/17.
- */
 public class ObservablesService {
 
     private static ObservablesService ourInstance = new ObservablesService();
@@ -21,10 +19,12 @@ public class ObservablesService {
         return ourInstance;
     }
 
+    private TMDbService mService;
     private Observable<MoviesData> mPopularMoviesObservable;
     private Observable<MoviesData> mTopRatedMoviesObservable;
     private Map<Integer, Observable<Movie>> mFavouriteMovieObservablesMap;
-    private TMDbService mService;
+    private Map<Integer, Observable<ReviewsData>> mMovieReviewsObservablesMap;
+
 
 
     private ObservablesService() {
@@ -33,6 +33,7 @@ public class ObservablesService {
         mPopularMoviesObservable = mService.getPopularMovieData().cache();
         mTopRatedMoviesObservable = mService.getTopRatedMovieData().cache();
         mFavouriteMovieObservablesMap = new ArrayMap<>();
+        mMovieReviewsObservablesMap = new ArrayMap<>();
     }
 
     public Observable<MoviesData> getPopularMoviesObservable() {
@@ -48,5 +49,12 @@ public class ObservablesService {
             mFavouriteMovieObservablesMap.put(id, mService.getMovieData(id).cache());
         return mFavouriteMovieObservablesMap.get(id);
     }
+
+    public Observable<ReviewsData> getMovieReviewsObservable(int id) {
+        if (!mMovieReviewsObservablesMap.containsKey(id))
+            mMovieReviewsObservablesMap.put(id, mService.getReviewsData(id).cache());
+        return mMovieReviewsObservablesMap.get(id);
+    }
+
 
 }

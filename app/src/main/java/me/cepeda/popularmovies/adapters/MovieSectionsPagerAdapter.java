@@ -7,10 +7,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import me.cepeda.popularmovies.ui.MovieOverviewFragment;
 import me.cepeda.popularmovies.ui.MovieReviewsFragment;
 
-/**
- * Created by CEPEDA on 17/2/17.
- */
-
 public class MovieSectionsPagerAdapter extends FragmentPagerAdapter {
 
     public MovieSectionsPagerAdapter(FragmentManager fm) {

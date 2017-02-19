@@ -24,8 +24,6 @@ import me.cepeda.popularmovies.utils.TMDbUtils;
 
 public class MovieOverviewFragment extends Fragment {
 
-    private final String TAG = getClass().getName();
-
     @BindView(R.id.iv_movie_poster) ImageView mMoviePosterImageView;
     @BindView(R.id.tv_original_title) TextView mOriginalTitleTextView;
     @BindView(R.id.tv_date) TextView mDateTextView;

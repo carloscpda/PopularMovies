@@ -18,10 +18,6 @@ import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.utils.TMDbUtils;
 
-/**
- * Created by CEPEDA on 22/1/17.
- */
-
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
     private List<Movie> movies;
@@ -65,11 +61,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
         notifyDataSetChanged();
     }
 
-    public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         @BindView(R.id.iv_movie_poster) ImageView mPosterImageView;
 
-        public MovieViewHolder(View itemView) {
+        MovieViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);

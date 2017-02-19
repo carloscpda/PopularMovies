@@ -14,10 +14,6 @@ import butterknife.ButterKnife;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.models.Review;
 
-/**
- * Created by CEPEDA on 22/1/17.
- */
-
 public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder> {
 
     private List<Review> reviews;
@@ -52,12 +48,12 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
         notifyDataSetChanged();
     }
 
-    public class ReviewViewHolder extends RecyclerView.ViewHolder {
+    class ReviewViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.tv_username) TextView mUsernameTextView;
         @BindView(R.id.tv_review) TextView mReviewTextView;
 
-        public ReviewViewHolder(View itemView) {
+        ReviewViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
         }

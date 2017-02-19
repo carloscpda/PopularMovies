@@ -7,12 +7,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -36,11 +36,13 @@ import me.cepeda.popularmovies.services.TMDbService;
 import me.cepeda.popularmovies.utils.TMDbUtils;
 import retrofit2.Retrofit;
 
-public class MovieInformationActivity extends FragmentActivity implements View.OnClickListener {
+public class MovieDetailsActivity extends FragmentActivity
+        implements View.OnClickListener, AppBarLayout.OnOffsetChangedListener {
 
-    private final String TAG = getClass().getName();
+    private static final String YOUTUBE_SITE = "YouTube";
+    private static final String BUNDLE_TAG_BUTTON_SHOW = "button";
+    private static final String BUNDLE_TAG_IS_COLLAPSED = "collapsed";
 
-    @BindView(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout mToolbar;
     @BindView(R.id.app_bar_layout) AppBarLayout mAppBarLayout;
     @BindView(R.id.tab_layout) TabLayout mTabLayout;
     @BindView(R.id.vp_container) ViewPager mViewPager;
@@ -49,53 +51,30 @@ public class MovieInformationActivity extends FragmentActivity implements View.O
     @BindView(R.id.fab_favourite) FloatingActionButton mFloatingActionButtonFavourite;
 
     private MovieSectionsPagerAdapter mMovieSectionsPagerAdapter;
-
     private Movie movie;
     private Trailer mainTrailer;
+    private boolean isPlayButtonShow = true;
+    private boolean isCollapsed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_movie_information);
+        setContentView(R.layout.activity_movie_details);
         ButterKnife.bind(this);
 
         Intent intent = getIntent();
         movie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
 
+        if (savedInstanceState != null) {
+            isPlayButtonShow = savedInstanceState.getBoolean(BUNDLE_TAG_BUTTON_SHOW);
+            isCollapsed = savedInstanceState.getBoolean(BUNDLE_TAG_IS_COLLAPSED);
+        }
+
         mMovieSectionsPagerAdapter = new MovieSectionsPagerAdapter(getSupportFragmentManager());
         mViewPager.setAdapter(mMovieSectionsPagerAdapter);
         mTabLayout.setupWithViewPager(mViewPager);
-
-        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-            boolean isShow = true;
-
-            @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-
-                int swapLine = appBarLayout.getTotalScrollRange() / 3;
-
-                if (isShow && -verticalOffset > swapLine) {
-                    isShow = false;
-                    mPlayTrailerImageButton.animate()
-                            .alpha(0.0f)
-                            .setDuration(300)
-                            .setListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    super.onAnimationEnd(animation);
-                                    if (!isShow) mPlayTrailerImageButton.setVisibility(View.INVISIBLE);
-                                }
-                            });
-                } else if (!isShow && -verticalOffset < swapLine) {
-                    isShow = true;
-                    mPlayTrailerImageButton.setVisibility(View.VISIBLE);
-                    mPlayTrailerImageButton.animate()
-                            .alpha(1.0f)
-                            .setDuration(300);
-                }
-
-            }
-        });
+        mAppBarLayout.addOnOffsetChangedListener(this);
+        mAppBarLayout.setExpanded(!isCollapsed);
 
         String backdropPath = movie.getBackdropPath();
         URL backdropURL = TMDbUtils.buildMovieBackdropURL(backdropPath);
@@ -110,6 +89,13 @@ public class MovieInformationActivity extends FragmentActivity implements View.O
         if (isFavouriteMovie()) mFloatingActionButtonFavourite.setImageResource(R.drawable.ic_favorite_red_a700_24dp);
         else mFloatingActionButtonFavourite.setImageResource(R.drawable.ic_favorite_grey_900_24dp);
 
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(BUNDLE_TAG_BUTTON_SHOW, isPlayButtonShow);
+        outState.putBoolean(BUNDLE_TAG_IS_COLLAPSED, isCollapsed);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -147,6 +133,33 @@ public class MovieInformationActivity extends FragmentActivity implements View.O
         }
     }
 
+    @Override
+    public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+        int swapLine = appBarLayout.getTotalScrollRange() / 3;
+
+        if (isPlayButtonShow && -verticalOffset > swapLine) {
+            isCollapsed = true;
+            isPlayButtonShow = false;
+            mPlayTrailerImageButton.animate()
+                    .alpha(0.0f)
+                    .setDuration(300)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            if (!isPlayButtonShow) mPlayTrailerImageButton.setVisibility(View.INVISIBLE);
+                        }
+                    });
+        } else if (!isPlayButtonShow && -verticalOffset < swapLine) {
+            isCollapsed = false;
+            isPlayButtonShow = true;
+            mPlayTrailerImageButton.setVisibility(View.VISIBLE);
+            mPlayTrailerImageButton.animate()
+                    .alpha(1.0f)
+                    .setDuration(300);
+        }
+    }
+
     private void loadTrailerData() {
         Retrofit retrofit = TMDbUtils.getRetrofit();
         TMDbService service = retrofit.create(TMDbService.class);
@@ -156,9 +169,14 @@ public class MovieInformationActivity extends FragmentActivity implements View.O
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(throwable -> mPlayTrailerImageButton.setVisibility(View.GONE))
                 .subscribe(trailersData -> {
-                    if (trailersData.getTrailers().size() == 0)
-                        mPlayTrailerImageButton.setVisibility(View.GONE);
-                    else mainTrailer = trailersData.getTrailers().get(0);
+                    for (Trailer trailer: trailersData.getTrailers()) {
+                        if (trailer.getSite().equals(YOUTUBE_SITE)) {
+                            mainTrailer = trailer;
+                            mPlayTrailerImageButton.setVisibility(View.VISIBLE);
+                            return;
+                        }
+                    }
+                    mPlayTrailerImageButton.setVisibility(View.GONE);
                 });
     }
 
@@ -184,4 +202,5 @@ public class MovieInformationActivity extends FragmentActivity implements View.O
         }
         return count == 1;
     }
+
 }

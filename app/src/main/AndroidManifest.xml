@@ -18,7 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.MovieInformationActivity"/>
+        <activity android:name=".ui.MovieDetailsActivity"/>
         
         <provider
             android:authorities="me.cepeda.popularmovies"

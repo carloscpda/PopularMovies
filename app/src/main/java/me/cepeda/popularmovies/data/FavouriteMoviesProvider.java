@@ -6,14 +6,11 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import static me.cepeda.popularmovies.data.FavouriteMoviesContract.FavouriteMoviesEntry.COLUMN_TMDB_ID;
 import static me.cepeda.popularmovies.data.FavouriteMoviesContract.FavouriteMoviesEntry.TABLE_NAME;
-
-/**
- * Created by CEPEDA on 18/2/17.
- */
 
 public class FavouriteMoviesProvider extends ContentProvider {
 
@@ -46,7 +43,7 @@ public class FavouriteMoviesProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String orderBy) {
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String orderBy) {
         final SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int match = sUriMatcher.match(uri);
         Cursor rCursor;
@@ -75,19 +72,19 @@ public class FavouriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri " + uri);
         }
-        rCursor.setNotificationUri(getContext().getContentResolver(), uri);
+        if (getContext() != null) rCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return rCursor;
     }
 
     @Nullable
     @Override
-    public String getType(Uri uri) {
+    public String getType(@NonNull Uri uri) {
         return null;
     }
 
     @Nullable
     @Override
-    public Uri insert(Uri uri, ContentValues contentValues) {
+    public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
         int match = sUriMatcher.match(uri);
 
@@ -101,12 +98,12 @@ public class FavouriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+        if (getContext() != null) getContext().getContentResolver().notifyChange(uri, null);
         return uri;
     }
 
     @Override
-    public int delete(Uri uri, String s, String[] strings) {
+    public int delete(@NonNull Uri uri, String s, String[] strings) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
         int match = sUriMatcher.match(uri);
         int rInteger;
@@ -119,12 +116,12 @@ public class FavouriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+        if (getContext() != null) getContext().getContentResolver().notifyChange(uri, null);
         return rInteger;
     }
 
     @Override
-    public int update(Uri uri, ContentValues contentValues, String s, String[] strings) {
+    public int update(@NonNull Uri uri, ContentValues contentValues, String s, String[] strings) {
         return 0;
     }
 }
