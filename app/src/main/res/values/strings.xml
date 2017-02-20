@@ -4,4 +4,7 @@
     <string name="sort_by_popular">Popular</string>
     <string name="sort_by_rating">Top Rated</string>
     <string name="sort_by_favourites">Favourites</string>
+    <string name="error_show_trailer">You have no app required to display this trailer.</string>
+    <string name="overview">Overview</string>
+    <string name="reviews">Reviews</string>
 </resources>

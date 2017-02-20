@@ -13,7 +13,7 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="@dimen/height_app_bar_layout"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:fitsSystemWindows="true">
 
@@ -23,9 +23,7 @@
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:contentScrim="?attr/colorPrimary"
-            app:expandedTitleMarginStart="48dp"
-            app:expandedTitleMarginEnd="64dp">
+            app:contentScrim="?attr/colorPrimary">
 
             <ImageView
                 android:id="@+id/iv_movie_backdrop"
@@ -60,7 +58,7 @@
                 android:background="@color/colorPrimaryTransparent"
                 app:tabGravity="center"
                 app:tabMode="scrollable"
-                app:tabContentStart="72dp" />
+                app:tabContentStart="@dimen/tab_content_start" />
 
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>

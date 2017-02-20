@@ -37,7 +37,10 @@ public class MovieOverviewFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Intent intent = getActivity().getIntent();
-        movie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+        Bundle extras = intent.getExtras();
+        if (extras != null)
+            if (extras.containsKey(Intent.EXTRA_INTENT))
+                movie = extras.getParcelable(Intent.EXTRA_INTENT);
     }
 
     @Nullable

@@ -10,10 +10,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -28,6 +31,8 @@ public class MovieReviewsFragment extends Fragment {
     private static final String TAG_POSITION = "position";
 
     @BindView(R.id.rv_reviews) RecyclerView mRecyclerView;
+    @BindView(R.id.tv_error_message_display) TextView mErrorMessageTextView;
+    @BindView(R.id.pb_loading_indicator) ProgressBar mLoagingIndicatorProgressBar;
 
     private LinearLayoutManager mLinearLayoutManager;
     private ReviewsAdapter mReviewsAdapter;
@@ -39,11 +44,17 @@ public class MovieReviewsFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Intent intent = getActivity().getIntent();
-        mMovie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
-        if (savedInstanceState != null) mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
+
+        Bundle extras = intent.getExtras();
+        if (extras != null)
+            if (extras.containsKey(Intent.EXTRA_INTENT))
+                mMovie = extras.getParcelable(Intent.EXTRA_INTENT);
+
+        if (savedInstanceState != null)
+            if (savedInstanceState.containsKey(TAG_POSITION))
+                mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
 
         mReviewsAdapter = new ReviewsAdapter();
-        loadReviewsData();
     }
 
     @Nullable
@@ -56,6 +67,8 @@ public class MovieReviewsFragment extends Fragment {
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mReviewsAdapter);
+
+        loadReviewsData();
 
         return rootView;
     }
@@ -77,13 +90,28 @@ public class MovieReviewsFragment extends Fragment {
 
         Observable<ReviewsData> observable =
                 ObservablesService.getInstance().getMovieReviewsObservable(mMovie.getId());
+
         mDisposable = observable
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(disposable -> mLoagingIndicatorProgressBar.setVisibility(View.VISIBLE))
+                .doOnTerminate(() -> mLoagingIndicatorProgressBar.setVisibility(View.INVISIBLE))
+                .onErrorResumeNext((ObservableSource<? extends ReviewsData>) observer -> showErrorMessageView())
                 .subscribe(reviewsData -> {
                     mReviewsAdapter.setReviews(reviewsData.getReviews());
                     mLinearLayoutManager.scrollToPosition(mScrollPosition);
+                    showReviewsDataView();
                 });
+    }
+
+    private void showReviewsDataView() {
+        mErrorMessageTextView.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    private void showErrorMessageView() {
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        mErrorMessageTextView.setVisibility(View.VISIBLE);
     }
 
 

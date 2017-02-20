@@ -1,6 +1,7 @@
 package me.cepeda.popularmovies.services;
 
 import android.support.v4.util.ArrayMap;
+import android.util.Log;
 
 import java.util.Map;
 
@@ -34,6 +35,7 @@ public class ObservablesService {
         mTopRatedMoviesObservable = mService.getTopRatedMovieData().cache();
         mFavouriteMovieObservablesMap = new ArrayMap<>();
         mMovieReviewsObservablesMap = new ArrayMap<>();
+
     }
 
     public Observable<MoviesData> getPopularMoviesObservable() {

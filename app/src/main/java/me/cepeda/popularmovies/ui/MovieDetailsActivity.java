@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -24,6 +25,7 @@ import java.net.URL;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import me.cepeda.popularmovies.R;
@@ -63,14 +65,19 @@ public class MovieDetailsActivity extends FragmentActivity
         ButterKnife.bind(this);
 
         Intent intent = getIntent();
-        movie = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+        Bundle extras = intent.getExtras();
+        if (extras != null)
+            if (extras.containsKey(Intent.EXTRA_INTENT))
+                movie = extras.getParcelable(Intent.EXTRA_INTENT);
 
         if (savedInstanceState != null) {
-            isPlayButtonShow = savedInstanceState.getBoolean(BUNDLE_TAG_BUTTON_SHOW);
-            isCollapsed = savedInstanceState.getBoolean(BUNDLE_TAG_IS_COLLAPSED);
+            if (savedInstanceState.containsKey(BUNDLE_TAG_BUTTON_SHOW))
+                isPlayButtonShow = savedInstanceState.getBoolean(BUNDLE_TAG_BUTTON_SHOW);
+            if (savedInstanceState.containsKey(BUNDLE_TAG_IS_COLLAPSED))
+                isCollapsed = savedInstanceState.getBoolean(BUNDLE_TAG_IS_COLLAPSED);
         }
 
-        mMovieSectionsPagerAdapter = new MovieSectionsPagerAdapter(getSupportFragmentManager());
+        mMovieSectionsPagerAdapter = new MovieSectionsPagerAdapter(getSupportFragmentManager(), this);
         mViewPager.setAdapter(mMovieSectionsPagerAdapter);
         mTabLayout.setupWithViewPager(mViewPager);
         mAppBarLayout.addOnOffsetChangedListener(this);
@@ -117,7 +124,12 @@ public class MovieDetailsActivity extends FragmentActivity
                 try {
                     startActivity(startYoutubeApp);
                 } catch (Exception e) {
-                    startActivity(startYoutubeWeb);
+                    if (startYoutubeWeb.resolveActivity(getPackageManager()) != null)
+                        startActivity(startYoutubeWeb);
+                    else {
+                        String message = getResources().getString(R.string.error_show_trailer);
+                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                    }
                 }
 
                 break;
@@ -165,9 +177,10 @@ public class MovieDetailsActivity extends FragmentActivity
         TMDbService service = retrofit.create(TMDbService.class);
 
         Observable<TrailersData> trailersDataObservable = service.getTrailersData(movie.getId());
-        trailersDataObservable.subscribeOn(Schedulers.newThread())
+        trailersDataObservable
+                .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> mPlayTrailerImageButton.setVisibility(View.GONE))
+                .onErrorResumeNext((ObservableSource<? extends TrailersData>) throwable -> mPlayTrailerImageButton.setVisibility(View.GONE))
                 .subscribe(trailersData -> {
                     for (Trailer trailer: trailersData.getTrailers()) {
                         if (trailer.getSite().equals(YOUTUBE_SITE)) {

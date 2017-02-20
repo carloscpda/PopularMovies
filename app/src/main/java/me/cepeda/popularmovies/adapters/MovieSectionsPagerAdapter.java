@@ -1,16 +1,21 @@
 package me.cepeda.popularmovies.adapters;
 
+import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.ui.MovieOverviewFragment;
 import me.cepeda.popularmovies.ui.MovieReviewsFragment;
 
 public class MovieSectionsPagerAdapter extends FragmentPagerAdapter {
 
-    public MovieSectionsPagerAdapter(FragmentManager fm) {
+    Context mContext;
+
+    public MovieSectionsPagerAdapter(FragmentManager fm, Context context) {
         super(fm);
+        mContext = context;
     }
 
     @Override
@@ -35,9 +40,9 @@ public class MovieSectionsPagerAdapter extends FragmentPagerAdapter {
     public CharSequence getPageTitle(int position) {
         switch (position) {
             case 0:
-                return "Overview";
+                return mContext.getResources().getString(R.string.overview);
             case 1:
-                return "Reviews";
+                return mContext.getResources().getString(R.string.reviews);
         }
         return null;
     }

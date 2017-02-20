@@ -8,10 +8,6 @@ import me.cepeda.popularmovies.models.TrailersData;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
-/**
- * Created by CEPEDA on 29/1/17.
- */
-
 public interface TMDbService {
     String API_KEY = "";
 

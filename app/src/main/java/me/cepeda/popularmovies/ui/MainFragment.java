@@ -10,21 +10,29 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.HttpException;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.exceptions.CompositeException;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import me.cepeda.popularmovies.R;
 import me.cepeda.popularmovies.adapters.MoviesAdapter;
@@ -35,6 +43,8 @@ import me.cepeda.popularmovies.models.Movie;
 import me.cepeda.popularmovies.models.MoviesData;
 
 public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapterOnClickHandler {
+
+    private final String TAG = getClass().getName();
 
     private final static int NUM_COLUMNS_PORTRAIT = 3;
     private final static int NUM_COLUMNS_LANDSCAPE = 5;
@@ -56,11 +66,14 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle bundle = getArguments();
-        mTabPosition = bundle.getInt(SortedSectionsPagerAdapter.KEY);
+        Bundle args = getArguments();
+        if (args != null)
+            if (args.containsKey(SortedSectionsPagerAdapter.KEY))
+                mTabPosition = args.getInt(SortedSectionsPagerAdapter.KEY);
 
         if (savedInstanceState != null)
-            mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
+            if (savedInstanceState.containsKey(TAG_POSITION))
+                mScrollPosition = savedInstanceState.getInt(TAG_POSITION);
 
         mMoviesAdapter = new MoviesAdapter(this);
     }
@@ -121,22 +134,24 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
     }
 
     private void showMoviesDataView() {
-        mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
         mErrorMessageTextView.setVisibility(View.INVISIBLE);
         mGridMoviesRecyclerView.setVisibility(View.VISIBLE);
     }
 
     private void showErrorMessageView() {
-        mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
         mGridMoviesRecyclerView.setVisibility(View.INVISIBLE);
         mErrorMessageTextView.setVisibility(View.VISIBLE);
     }
 
     private void subscribe(Observable<MoviesData> observable) {
+
         mCompositeDisposable.add(
-                observable.subscribeOn(Schedulers.newThread())
+                observable
+                        .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .doOnError(throwable -> showErrorMessageView())
+                        .doOnSubscribe(disposable -> mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE))
+                        .doOnTerminate(() -> mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE))
+                        .onErrorResumeNext((ObservableSource<? extends MoviesData>) observer -> showErrorMessageView())
                         .subscribe(moviesData -> {
                             mMoviesAdapter.setMovies(moviesData.getMovies());
                             mGridLayoutManager.scrollToPosition(mScrollPosition);
@@ -147,13 +162,18 @@ public class MainFragment extends Fragment implements MoviesAdapter.MoviesAdapte
 
     private void subscribe() {
         Disposable subscribe = Observable.fromIterable(getIDs())
-                .flatMap(integer -> ObservablesService.getInstance().getMovieObservable(integer))
-                .toList()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE))
-                .doOnError(throwable -> showErrorMessageView())
+                .doOnTerminate(() -> mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE))
+                .flatMap(integer -> ObservablesService.getInstance().getMovieObservable(integer)
+                        .subscribeOn(Schedulers.newThread())
+                        .observeOn(AndroidSchedulers.mainThread())
+                )
+                .toList()
+                .onErrorResumeNext(throwable -> observer -> showErrorMessageView())
                 .subscribe(movies -> {
+                    Collections.sort(movies, (o1, o2) -> o1.getId() - o2.getId());
                     mMoviesAdapter.setMovies(movies);
                     mGridLayoutManager.scrollToPosition(mScrollPosition);
                     showMoviesDataView();
